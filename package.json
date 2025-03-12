@@ -1,0 +1,73 @@
+{
+  "name": "vitepress-plugin-link",
+  "type": "module",
+  "version": "1.0.1",
+  "private": false,
+  "description": "扫描 markdown 文档，生成永久链接",
+  "keywords": [
+    "vitepress",
+    "vite",
+    "plugin",
+    "permalink"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/liyao52033/vitepress-plugin-permalink-liyao.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liyao52033/vitepress-plugin-permalink-liyao.git"
+  },
+  "bugs": {
+    "url": "https://github.com/liyao52033/vitepress-plugin-permalink-liyao/issues"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./usePermalink": {
+      "types": "./dist/usePermalink.d.ts",
+      "import": "./dist/usePermalink.mjs",
+      "require": "./dist/usePermalink.cjs"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.mjs",
+      "require": "./dist/*.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/index.d.ts"
+      ],
+      "usePermalink": [
+        "./dist/usePermalink.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "stub": "unbuild --stub",
+    "build": "unbuild"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "unbuild": "^3.2.0",
+    "vite": "^6.0.7",
+    "vitepress": "^1.6.3"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.7",
+    "vitepress": "^1.6.3"
+  }
+}
