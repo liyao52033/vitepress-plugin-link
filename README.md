@@ -1,4 +1,4 @@
-# vitepress-plugin-permalink
+# vitepress-plugin-link
 
 这是一个适用于 `vitepress` 的 Vite 插件，在 `vitepress` 启动后读取 markdown 文档 `frontmatter` 的 `permalink`。
 
@@ -13,7 +13,7 @@
 
 ## 🕯️ Install
 
-安装 `vitepress-plugin-permalink` 插件
+安装 `vitepress-plugin-link` 插件
 
 ```bash
 # 推荐使用 pnpm
@@ -24,16 +24,34 @@ yarn add vitepress-plugin-plink
 npm install vitepress-plugin-link
 ```
 
-添加 `vitepress-plugin-permalink` 插件到 `.vitepress/config.ts`
+1、添加 `vitepress-plugin-link` 插件到 `.vitepress/config.ts`
 
 ```typescript
-import Permalink from "vitepress-plugin-permalink";
+import Permalink from "vitepress-plugin-link";
 
 export default defineConfig({
   vite: {
-    plugins: [Permalink(/* options */)],
+    plugins: [Permalink({
+      path: "docs",
+    })],
   },
 });
+```
+
+2、`.vitepress/theme/index.ts`监听路由变化
+
+```typescript
+import usePermalink from "vitepress-plugin-link/usePermalink";
+
+export default {
+    extends: DefaultTheme,
+    Layout() {
+
+        // 开启监听 permalink
+        usePermalink().startWatch();
+    }
+}  
+
 ```
 
 > 说明：该插件仅限项目启动时生效，已改动或新添加的 markdown 需要重启项目才能生效。
