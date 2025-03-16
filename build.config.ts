@@ -10,5 +10,5 @@ export default defineBuildConfig({
       exports: "named",
     },
   },
-  externals: ["vitepress", "vue"],
+  externals: ["vitepress", "vue", "vite"],
 });

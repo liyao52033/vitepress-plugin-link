@@ -22,6 +22,8 @@ export default function VitePluginVitePressPermalink(option: PermalinkOption = {
         rewrites,
       } = config.vitepress;
 
+      if(themeConfig.permalinks) return
+
       const baseDir = option.path ? join(process.cwd(), option.path) : srcDir;
 
       const permalinks = createPermalinks({ ...option, path: baseDir }, cleanUrls);
