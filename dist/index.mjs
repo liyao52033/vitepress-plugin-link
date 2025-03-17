@@ -89,9 +89,6 @@ function VitePluginVitePressPermalink(option = {}) {
       themeConfig.permalinks = { map: pathToPermalink, inv: permalinkToPath };
       log("injected permalinks data successfully. \u6CE8\u5165\u6C38\u4E45\u94FE\u63A5\u6570\u636E\u6210\u529F!", "green");
       vitepressConfig = config.vitepress;
-      if (!localesKeys.length) {
-        return setActiveMatchWhenUsePermalink(themeConfig.nav, permalinkToPath, cleanUrls, rewrites);
-      }
       localesKeys.forEach((localeKey) => {
         setActiveMatchWhenUsePermalink(
           locales[localeKey].themeConfig?.nav,
@@ -111,13 +108,30 @@ function VitePluginVitePressPermalink(option = {}) {
         },
         rewrites
       } = vitepressConfig;
-      server.middlewares.use((req, _res, next) => {
+      server.middlewares.use((req, res, next) => {
         if (req.url) {
-          const reqUrl = decodeURI(req.url).replace(/[?#].*$/, "").replace(/\.md$/, "").slice(base.length);
-          const finalReqUrl = reqUrl.startsWith("/") ? reqUrl : `/${reqUrl}`;
-          const filePath = permalinks.inv[cleanUrls ? finalReqUrl : `${finalReqUrl}.html`];
-          const realFilePath = rewrites.inv[`${filePath}.md`]?.replace(/\.md/, "") || filePath;
-          if (realFilePath) req.url = req.url.replace(encodeURI(reqUrl), encodeURI(realFilePath));
+          try {
+            const reqUrl = decodeURI(req.url).replace(/[?#].*$/, "").replace(/\.md$/, "").slice(base.length);
+            const finalReqUrl = reqUrl.startsWith("/") ? reqUrl : `/${reqUrl}`;
+            const pathVariations = [
+              cleanUrls ? finalReqUrl : `${finalReqUrl}.html`,
+              cleanUrls ? `${finalReqUrl}/` : `${finalReqUrl}.html`,
+              cleanUrls ? finalReqUrl.replace(/\/$/, "") : `${finalReqUrl.replace(/\/$/, "")}.html`
+            ];
+            let filePath = null;
+            for (const pathVar of pathVariations) {
+              if (permalinks.inv[pathVar]) {
+                filePath = permalinks.inv[pathVar];
+                break;
+              }
+            }
+            const realFilePath = filePath ? rewrites.inv[`${filePath}.md`]?.replace(/\.md/, "") || filePath : null;
+            if (realFilePath) {
+              req.url = req.url.replace(encodeURI(reqUrl), encodeURI(realFilePath));
+            }
+          } catch (error) {
+            console.error("\u5904\u7406\u8BF7\u6C42URL\u65F6\u51FA\u9519:", error);
+          }
         }
         next();
       });
@@ -136,11 +150,19 @@ const setActiveMatchWhenUsePermalink = (nav = [], permalinkToPath, cleanUrls = f
     const link = standardLink(item.link);
     const path = permalinkToPath[cleanUrls ? link : `${link.replace(/\.html/, "")}.html`];
     if (path && !item.activeMatch) {
-      const finalPathArr = (rewrites.map[`${path}.md`]?.replace(/\.md/, "") || path).split("/");
-      if (finalPathArr[0] === localeKey) item.activeMatch = `${finalPathArr[0]}/${finalPathArr[1]}`;
-      else item.activeMatch = finalPathArr[0];
+      const finalPath = rewrites.map[`${path}.md`]?.replace(/\.md/, "") || path;
+      const pathSegments = finalPath.split("/");
+      let activeMatchPath;
+      if (pathSegments[0] === localeKey) {
+        activeMatchPath = pathSegments.length > 1 ? `^/${pathSegments[0]}/${pathSegments[1]}` : `^/${pathSegments[0]}`;
+      } else {
+        activeMatchPath = `^/${pathSegments[0]}`;
+      }
+      item.activeMatch = `${activeMatchPath}(?:/|$)`;
     }
-    if (item.items?.length) setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites);
+    if (item.items?.length) {
+      setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites, localeKey);
+    }
   });
 };
 

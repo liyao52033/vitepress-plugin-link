@@ -1,7 +1,7 @@
 {
   "name": "vitepress-plugin-link",
   "type": "module",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": false,
   "description": "扫描 markdown 文档，生成永久链接",
   "keywords": [
