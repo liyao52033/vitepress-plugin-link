@@ -11,13 +11,13 @@
     "permalink"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/liyao52033/vitepress-plugin-permalink-liyao.git",
+  "homepage": "https://github.com/liyao52033/vitepress-plugin-link.git",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liyao52033/vitepress-plugin-permalink-liyao.git"
+    "url": "git+https://github.com/liyao52033/vitepress-plugin-link.git"
   },
   "bugs": {
-    "url": "https://github.com/liyao52033/vitepress-plugin-permalink-liyao/issues"
+    "url": "https://github.com/liyao52033/vitepress-plugin-link/issues"
   },
   "files": [
     "dist"
@@ -58,10 +58,12 @@
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "url-parse": "^1.5.10"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "@types/url-parse": "^1.4.11",
     "typescript": "^5.8.2",
     "unbuild": "^3.2.0",
     "vite": "^6.0.7",

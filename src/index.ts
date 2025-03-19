@@ -149,34 +149,6 @@ const getLocalePermalink = (localesKeys: string[] = [], path = "", permalink = "
 //  * @param rewrites 如果设置了 rewrites，则取 rewrites 后的文件路径
 //  * @param localeKey 多语言名称
 //  */
-// const setActiveMatchWhenUsePermalink = (
-//   nav: any[] = [],
-//   permalinkToPath: Record<string, string>,
-//   cleanUrls = false,
-//   rewrites: Record<string, any> = {},
-//   localeKey = ""
-// ) => {
-//   if (!nav.length) return;
-
-//   nav.forEach(item => {
-//     if (item.link === "/") return;
-
-//     const link = standardLink(item.link);
-//     // cleanUrls 为 false 时，permalinkToPath 的 key 都会带上 .html
-//     const path = permalinkToPath[cleanUrls ? link : `${link.replace(/\.html/, "")}.html`];
-
-//     if (path && !item.activeMatch) {
-//       // 如果设置了 rewrites，则取 rewrites 后的文件路径
-//       const finalPathArr = (rewrites.map[`${path}.md`]?.replace(/\.md/, "") || path).split("/");
-//       // 只传入父目录（兼容国际化目录），这样访问里面的 Markdown 文件后，对应导航都可以高亮（官方规定 activeMatch 是一个正则表达式字符串）
-//       if (finalPathArr[0] === localeKey) item.activeMatch = `${finalPathArr[0]}/${finalPathArr[1]}`;
-//       else item.activeMatch = finalPathArr[0];
-//     }
-//     if (item.items?.length) setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites);
-//   });
-// };
-
-
 const setActiveMatchWhenUsePermalink = (
   nav: any[] = [],
   permalinkToPath: Record<string, string>,
@@ -195,29 +167,13 @@ const setActiveMatchWhenUsePermalink = (
 
     if (path && !item.activeMatch) {
       // 如果设置了 rewrites，则取 rewrites 后的文件路径
-      const finalPath = rewrites.map[`${path}.md`]?.replace(/\.md/, "") || path;
-      
-      // 使用finalPath构建activeMatch，确保与实际文件路径匹配
-      const pathSegments = finalPath.split('/');
-      let activeMatchPath;
-      
-      if (pathSegments[0] === localeKey) {
-        // 对于国际化路径，使用语言前缀和第一级目录
-        activeMatchPath = pathSegments.length > 1 ? 
-          `^/${pathSegments[0]}/${pathSegments[1]}` : 
-          `^/${pathSegments[0]}`;
-      } else {
-        // 对于非国际化路径，使用第一级目录
-        activeMatchPath = `^/${pathSegments[0]}`;
-      }
-      
-      // 添加结束匹配
-      item.activeMatch = `${activeMatchPath}(?:/|$)`;
+      const finalPathArr = (rewrites.map[`${path}.md`]?.replace(/\.md/, "") || path).split("/");
+      // 只传入父目录（兼容国际化目录），这样访问里面的 Markdown 文件后，对应导航都可以高亮（官方规定 activeMatch 是一个正则表达式字符串）
+      if (finalPathArr[0] === localeKey) item.activeMatch = `${finalPathArr[0]}/${finalPathArr[1]}`;
+      else item.activeMatch = finalPathArr[0];
     }
-
-    // 递归处理子项
-    if (item.items?.length) {
-      setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites, localeKey);
-    }
+    if (item.items?.length) setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites);
   });
 };
+
+
