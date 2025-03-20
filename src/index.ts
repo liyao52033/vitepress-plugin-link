@@ -22,7 +22,7 @@ export default function VitePluginVitePressPermalink(option: PermalinkOption = {
         rewrites,
       } = config.vitepress;
 
-      if(themeConfig.permalinks) return
+      if (themeConfig.permalinks) return
 
       const baseDir = option.path ? join(process.cwd(), option.path) : srcDir;
 
@@ -56,9 +56,9 @@ export default function VitePluginVitePressPermalink(option: PermalinkOption = {
       vitepressConfig = config.vitepress;
 
       // 导航栏高亮适配 permalink
-      if (!localesKeys.length) {
-        return setActiveMatchWhenUsePermalink(themeConfig.nav, permalinkToPath, cleanUrls, rewrites);
-      }
+      // if (!localesKeys.length) {
+      //   return setActiveMatchWhenUsePermalink(themeConfig.nav, permalinkToPath, cleanUrls, rewrites);
+      // }
 
       localesKeys.forEach(localeKey => {
         setActiveMatchWhenUsePermalink(
@@ -79,23 +79,44 @@ export default function VitePluginVitePressPermalink(option: PermalinkOption = {
         },
         rewrites,
       } = vitepressConfig;
-      // 将 permalink 重写实际文件路径，这是在服务器环境中执行，此时还未到浏览器环境，因此在浏览器地址栏变化之前执行，即浏览器地址栏无延迟变化
-      server.middlewares.use((req, _res, next) => {
+      
+      // 将 permalink 重写实际文件路径，这是在服务器环境中执行
+      server.middlewares.use((req, res, next) => {
         // req.url 为实际的文件资源地址，如 /guide/index.md，而不是浏览器的请求地址 /guide/index.html
         if (req.url) {
-          const reqUrl = decodeURI(req.url)
-            .replace(/[?#].*$/, "")
-            .replace(/\.md$/, "")
-            .slice(base.length);
-
-          const finalReqUrl = reqUrl.startsWith("/") ? reqUrl : `/${reqUrl}`;
-          // 如果访问链接 reqUrl 为 permalink，则找到对应的文档路由。当开启 cleanUrls 后，permalinks 内容都是 .html 结尾
-          const filePath = permalinks.inv[cleanUrls ? finalReqUrl : `${finalReqUrl}.html`];
-          // 如果设置了 rewrites，则取没有 rewrites 前的实际文件地址
-          const realFilePath = rewrites.inv[`${filePath}.md`]?.replace(/\.md/, "") || filePath;
-
-          // 如果找到文档路由，则跳转，防止页面 404。当开启 cleanUrls 后，得到的文档地址为 .html 结尾，因此需要替换为空
-          if (realFilePath) req.url = req.url.replace(encodeURI(reqUrl), encodeURI(realFilePath));
+          try {
+            const reqUrl = decodeURI(req.url)
+              .replace(/[?#].*$/, "")
+              .replace(/\.md$/, "")
+              .slice(base.length);
+      
+            const finalReqUrl = reqUrl.startsWith("/") ? reqUrl : `/${reqUrl}`;
+            
+            // 尝试多种可能的路径格式来匹配
+            const pathVariations = [
+              cleanUrls ? finalReqUrl : `${finalReqUrl}.html`,
+              cleanUrls ? `${finalReqUrl}/` : `${finalReqUrl}.html`,
+              cleanUrls ? finalReqUrl.replace(/\/$/, "") : `${finalReqUrl.replace(/\/$/, "")}.html`
+            ];
+            
+            let filePath = null;
+            for (const pathVar of pathVariations) {
+              if (permalinks.inv[pathVar]) {
+                filePath = permalinks.inv[pathVar];
+                break;
+              }
+            }
+            
+            // 如果设置了 rewrites，则取没有 rewrites 前的实际文件地址
+            const realFilePath = filePath ? (rewrites.inv[`${filePath}.md`]?.replace(/\.md/, "") || filePath) : null;
+      
+            // 如果找到文档路由，则跳转，防止页面 404
+            if (realFilePath) {
+              req.url = req.url.replace(encodeURI(reqUrl), encodeURI(realFilePath));
+            }
+          } catch (error) {
+            console.error('处理请求URL时出错:', error);
+          }
         }
         next();
       });
@@ -118,16 +139,16 @@ const getLocalePermalink = (localesKeys: string[] = [], path = "", permalink = "
   return permalink;
 };
 
-/**
- * 如果 nav 有 link 且 link 为 permalink，则添加 activeMatch 为 permalink 对应的文件路径
- * 这里的处理是导航栏兼容 permalink 的高亮功能，默认访问 permalink 后，导航栏不会高亮，因为导航栏是根据实际的文件路径进行匹配
- *
- * @param nav 导航栏
- * @param permalinkToPath permalink 和文件路径的映射关系
- * @param cleanUrls cleanUrls
- * @param rewrites 如果设置了 rewrites，则取 rewrites 后的文件路径
- * @param localeKey 多语言名称
- */
+// /**
+//  * 如果 nav 有 link 且 link 为 permalink，则添加 activeMatch 为 permalink 对应的文件路径
+//  * 这里的处理是导航栏兼容 permalink 的高亮功能，默认访问 permalink 后，导航栏不会高亮，因为导航栏是根据实际的文件路径进行匹配
+//  *
+//  * @param nav 导航栏
+//  * @param permalinkToPath permalink 和文件路径的映射关系
+//  * @param cleanUrls cleanUrls
+//  * @param rewrites 如果设置了 rewrites，则取 rewrites 后的文件路径
+//  * @param localeKey 多语言名称
+//  */
 const setActiveMatchWhenUsePermalink = (
   nav: any[] = [],
   permalinkToPath: Record<string, string>,
@@ -154,3 +175,5 @@ const setActiveMatchWhenUsePermalink = (
     if (item.items?.length) setActiveMatchWhenUsePermalink(item.items, permalinkToPath, cleanUrls, rewrites);
   });
 };
+
+

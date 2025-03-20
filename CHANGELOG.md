@@ -1,5 +1,12 @@
 # vitepress-plugin-link
 
+## 1.4.3
+
+### Patch Changes
+
+
+
+
 ## 1.4.1
 
 ### Patch Changes
