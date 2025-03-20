@@ -42,7 +42,7 @@ export default function usePermalink() {
 
   // 添加上次处理的URL记录，避免重复处理
   let lastProcessedUrl = '';
-
+  
   /**
    * 兼容 SSR，确保 push 方法只在浏览器环境生效
    */
@@ -71,13 +71,13 @@ export default function usePermalink() {
       }
     }
 
+    console.log("跳转路由：",href)
+
     // 确保页面加载完成后执行跳转
     nextTick(() => {
       router.go(href);
     });
 
-  //  router.go(href);
-  
   };
 
   /**
@@ -93,6 +93,7 @@ export default function usePermalink() {
     const { pathname, search, hash } = new URL(href, fakeHost);
     const decodePath = decodeURIComponent(pathname.slice(base.length || 1));
     const decodeHash = decodeURIComponent(hash);
+
     const permalink = permalinks.map?.[decodePath.replace(/\.html/, "")];
 
     if (permalink === decodePath) return;
@@ -103,10 +104,12 @@ export default function usePermalink() {
       });
     } else {
       const path = permalinks.inv?.[`/${decodePath}`];
+      console.log("permalink:", `${path}${search}${decodeHash}`)
       if (path) return router.push(`${path}${search}${decodeHash}`);
     }
   };
 
+  
   /**
    * 监听路由变化
    * 
@@ -139,8 +142,9 @@ export default function usePermalink() {
     router.onAfterRouteChange = (href: string) => {
       debouncedProcessUrl(href);
       selfOnAfterRouteChange?.(href);
-    };
+    }; 
   };
+
 
   return { startWatch };
 }
