@@ -105,10 +105,10 @@ export default function usePermalink() {
     }
   };
 
-  onBeforeMount(() => { processUrl(window.location.href); }); 
+  onBeforeMount(() => { processUrl(window.location.href) })
   
   function popStateHandler() {
-    processUrl(window.location.href);
+    processUrl(window.location.href)
   }
 
    /**
@@ -118,7 +118,7 @@ export default function usePermalink() {
    *
    *  1. 路由事件触发多次 ：VitePress 的路由系统在导航过程中可能会触发多次 onAfterRouteChange 事件。
    *  2. 事件监听器重复注册 ：每次调用 startWatch 函数时，都会重新注册 onAfterRouteChange 事件处理器，但没有移除之前的处理器。
-   * 3. 组件重新挂载 ：如果包含 usePermalink 的组件被多次挂载或重新渲染，会导致多个事件监听器被注册。
+   *  3. 组件重新挂载 ：如果包含 usePermalink 的组件被多次挂载或重新渲染，会导致多个事件监听器被注册。
    */
   const startWatch = () => {
     if (!permalinkKeys.length) return;
@@ -130,7 +130,7 @@ export default function usePermalink() {
 
     // 在这里添加初始化处理
     if (inBrowser) {
-      
+
       // 添加 popstate 事件监听，处理浏览器前进后退操作
       window.addEventListener('popstate', popStateHandler);
 

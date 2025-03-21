@@ -1,11 +1,10 @@
 # vitepress-plugin-link
 
-## 1.4.3
+## 1.4.5
 
 ### Patch Changes
-
-
-
+- 添加防抖，防止路由变化时频繁触发
+- 添加 popstate 事件监听，处理浏览器前进后退操作
 
 ## 1.4.1
 

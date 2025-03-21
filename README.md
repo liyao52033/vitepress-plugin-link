@@ -38,19 +38,50 @@ export default defineConfig({
 });
 ```
 
-2、`.vitepress/theme/index.ts`监听路由变化
+2、在`theme/layout/MyLayout.vue`开启监听, 插件使用了onBeforeMount等方法，必须在setUp中执行。
+```vue 
+<script setup lang="ts">
+import DefaultTheme from 'vitepress/theme'
+const { Layout } = DefaultTheme
+import NotFound from "../components/NotFound.vue"; // 自定义的404组件
+
+import usePermalink from "vitepress-plugin-link/usePermalink";
+usePermalink().startWatch();
+
+
+ /**
+   * vitepress-plugin-link 插件在 onBeforeMount 里根据自定义 URL 寻找对应的文档进行加载，但是 Vitepress 初始化页面在 ``onBeforeMount之前执行，因此需要延迟时间来等待vitepress-plugin-link` 插件执行完成，于是需要404 页面延迟加载时间，单位为毫秒
+   */
+onMounted(() => {
+  setTimeout(() => {
+    isShow.value = true
+  }, 200) // 可调整延迟时间（单位：毫秒）
+})
+</script>
+
+<template>
+  <Layout>
+    // 插入你的插槽...
+   <template #not-found>
+      <ClientOnly>
+          <NotFound  v-if="isShow"/>
+      </ClientOnly>
+  </template>
+  </Layout>
+</template>
+```
+
+3、`.vitepress/theme/index.ts`引用新的布局
 
 ```typescript
-import usePermalink from "vitepress-plugin-link/usePermalink";
+import DefaultTheme from 'vitepress/theme'
+import MyLayout from './MyLayout.vue'
 
 export default {
-    extends: DefaultTheme,
-    Layout() {
-
-        // 开启监听 permalink
-        usePermalink().startWatch();
-    }
-}  
+  extends: DefaultTheme,
+  // 使用注入插槽的包装组件覆盖 Layout
+  Layout: MyLayout
+}
 
 ```
 
