@@ -1,5 +1,5 @@
-import { nextTick } from "vue";
 import * as Vitepress from 'vitepress';
+import { onBeforeMount, onUnmounted } from 'vue';
 
 const { useData, useRouter } = Vitepress;
 const inBrowser = typeof window !== "undefined";
@@ -30,6 +30,8 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
 }
 
 
+
+
 export default function usePermalink() {
   if (!inBrowser) return { startWatch: () => { } }; // SSR 期间不执行
 
@@ -42,7 +44,7 @@ export default function usePermalink() {
 
   // 添加上次处理的URL记录，避免重复处理
   let lastProcessedUrl = '';
-  
+
   /**
    * 兼容 SSR，确保 push 方法只在浏览器环境生效
    */
@@ -53,8 +55,10 @@ export default function usePermalink() {
     // 解码，支持中文
     const decodePath = decodeURIComponent(pathname);
     const decodeHash = decodeURIComponent(hash);
-    // 根据 decodePath 找 permalink，当使用 cleanUrls 为 false 时，decodePath 会带上 .html，因此尝试去掉 .html
-    let permalink = permalinks.map[decodePath.replace(/\.html/, "")];
+    // 根据 decodePath 找 permalink
+    // 统一去掉最前面的斜杠和结尾的 .html
+    const cleanPath = (path: string) => path.replace(/^\/+/, "").replace(/\.html$/, "");
+    let permalink = permalinks.map?.[cleanPath(decodePath)];
 
     // 如果当前 pathname 和 permalink 相同，则直接跳转，等价于直接调用 go 方法
     if (permalink === decodePath) return router.go(href);
@@ -71,13 +75,7 @@ export default function usePermalink() {
       }
     }
 
-    console.log("跳转路由：",href)
-
-    // 确保页面加载完成后执行跳转
-    nextTick(() => {
       router.go(href);
-    });
-
   };
 
   /**
@@ -94,23 +92,26 @@ export default function usePermalink() {
     const decodePath = decodeURIComponent(pathname.slice(base.length || 1));
     const decodeHash = decodeURIComponent(hash);
 
-    const permalink = permalinks.map?.[decodePath.replace(/\.html/, "")];
+    const cleanPath = (path: string) => path.replace(/^\/+/, "").replace(/\.html$/, "");
+    const permalink = permalinks.map?.[cleanPath(decodePath)]
 
     if (permalink === decodePath) return;
 
     if (permalink) {
-      nextTick(() => {
         history.replaceState(history.state || null, "", `${permalink}${search}${decodeHash}`);
-      });
     } else {
       const path = permalinks.inv?.[`/${decodePath}`];
-      console.log("permalink:", `${path}${search}${decodeHash}`)
       if (path) return router.push(`${path}${search}${decodeHash}`);
     }
   };
 
+  onBeforeMount(() => { processUrl(window.location.href); }); 
   
-  /**
+  function popStateHandler() {
+    processUrl(window.location.href);
+  }
+
+   /**
    * 监听路由变化
    * 
    * 导航栏链接点击后 processUrl 函数被多次调用的原因可能有以下几点：
@@ -129,22 +130,31 @@ export default function usePermalink() {
 
     // 在这里添加初始化处理
     if (inBrowser) {
-      // 使用 nextTick 确保在 DOM 更新后处理 URL
-      nextTick(() => {
-        processUrl(window.location.href);
-      });
+      
+      // 添加 popstate 事件监听，处理浏览器前进后退操作
+      window.addEventListener('popstate', popStateHandler);
+
     }
 
     // 使用防抖处理路由变化
-    const debouncedProcessUrl = debounce(processUrl, 300);
+    const debouncedProcessUrl = debounce(processUrl, 100);
 
     const selfOnAfterRouteChange = router.onAfterRouteChange;
     router.onAfterRouteChange = (href: string) => {
       debouncedProcessUrl(href);
       selfOnAfterRouteChange?.(href);
-    }; 
+    };
   };
 
+ 
+
+  onUnmounted(() => {
+    // 移除事件监听器
+    window.removeEventListener('popstate', popStateHandler);
+    // 重置标志
+    isWatchStarted = false;
+  });
+ 
 
   return { startWatch };
 }
