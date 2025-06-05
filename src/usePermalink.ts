@@ -29,9 +29,6 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
   return debounced;
 }
 
-
-
-
 export default function usePermalink() {
   if (!inBrowser) return { startWatch: () => { } }; // SSR 期间不执行
 
